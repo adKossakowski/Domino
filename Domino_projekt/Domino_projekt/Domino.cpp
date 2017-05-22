@@ -1,6 +1,6 @@
 
 #include "ClassFile.h"
-#include<Windows.h>
+
 
 int przywitanie()
 {
@@ -80,30 +80,7 @@ int main()
 			//wylosowano kostke do ulozenia
 			while (true)
 			{
-				bool czyOk;
-				do {
-					putchar('\n');
-					ulk.wyswietl_kostki();
-					gracz1.wyswietlMoje_kostki();
-					putchar('\n');
-					int wyb;
-					cout << "\nProszê wybraæ kostkê:\t";
-					cin >> wyb;
-					//int co = gracz1.top();
-					if ((wyb - 1) == gracz1.top())
-					{
-						czyOk = true;
-						gracz1.pobierz_Kostke(kontener);
-						break;
-					}
-					czyOk = ulk.uluz_kostke(gracz1.polozKostke(wyb - 1));
-					if (czyOk == false) {
-						cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
-						gracz1.zwiekszTop();
-						Sleep(1000);
-						system("cls");
-					}
-				} while (czyOk == false);
+				gracz1.polozKostke(kontener, ulk);
 				//jesli brak kostek gracz jeden wygrywa
 				if (gracz1.top() == 0)
 				{
@@ -114,9 +91,7 @@ int main()
 				Sleep(1000);
 				system("cls");
 				//
-				do {
-					gracz2.polozKostke(kontener, ulk);
-				} while (czyOk == false);
+				gracz2.polozKostke(kontener, ulk);
 				if (gracz2.top() == 0)
 				{
 					gracz2.wygrana();
@@ -144,30 +119,7 @@ int main()
 			UlozenieKostek ulk;
 			ulk.pierwsza_kostka(kontener);
 			while (true) {
-				bool czyOk;
-				do {
-					putchar('\n');
-					ulk.wyswietl_kostki();
-					gracz1.wyswietlMoje_kostki();
-					putchar('\n');
-					int wyb;
-					cout << "\nProszê wybraæ kostkê:\t";
-					cin >> wyb;
-					//int co = gracz1.top();
-					if ((wyb - 1) == gracz1.top())
-					{
-						czyOk = true;
-						gracz1.pobierz_Kostke(kontener);
-						break;
-					}
-					czyOk = ulk.uluz_kostke(gracz1.polozKostke(wyb - 1));
-					if (czyOk == false) {
-						cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
-						gracz1.zwiekszTop();
-						Sleep(1000);
-						system("cls");
-					}
-				} while (czyOk == false);
+				gracz1.polozKostke(kontener, ulk);
 				if (gracz1.top() == 0)
 				{
 					gracz1.wygrana();
@@ -175,28 +127,7 @@ int main()
 				}
 				Sleep(1000);
 				system("cls");
-				do {
-					putchar('\n');
-					ulk.wyswietl_kostki();
-					gracz2.wyswietlMoje_kostki();
-					putchar('\n');
-					int wyb;
-					cout << "\nProszê wybraæ kostkê:\t";
-					cin >> wyb;
-					if ((wyb - 1) == gracz2.top())
-					{
-						czyOk = true;
-						gracz2.pobierz_Kostke(kontener);
-						break;
-					}
-					czyOk = ulk.uluz_kostke(gracz2.polozKostke(wyb - 1));
-					if (czyOk == false) {
-						cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
-						gracz2.zwiekszTop();
-						Sleep(1000);
-						system("cls");
-					}
-				} while (czyOk == false);
+				gracz2.polozKostke(kontener, ulk);
 				Sleep(1000);
 				system("cls");
 				if (gracz2.top() == 0)

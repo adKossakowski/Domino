@@ -11,6 +11,7 @@
 #include<string.h>
 #include<ctime>
 #include<stdlib.h>
+#include<Windows.h>
 
 using namespace std;
 
@@ -115,13 +116,13 @@ public:
 	bool uluz_kostke(KostkaLicz newKostka)
 	{
 		if (lista.wyswietl(lista.getTop() - 1).getLiczba_p() == newKostka.getLiczba_l()) {
-			cout << "Wstawiono kostke\n";
+			cout << "\nWstawiono kostke\n";
 			lista.push(newKostka);
 			return true;
 		}
 		else if (lista.wyswietl(lista.getTop() - 1).getLiczba_p() == newKostka.getLiczba_p())
 		{
-			cout << "Wstawiono kostke\n";
+			cout << "\nWstawiono kostke\n";
 			newKostka.swap();
 			lista.push(newKostka);
 			return true;
@@ -138,29 +139,8 @@ protected:
 	char nazwa_Gracza[MAX];
 	int punkty;
 	MyContener<KostkaLicz, LICZK + 4> moje_kostki;
-public:
 
-	Gracz(char *nazwaGracza)
-	{
-		strcpy(this->nazwa_Gracza, nazwaGracza);
-		punkty = 0;
-		cout << "=========================================================" << endl;
-		cout << "Ustawiono nazwê gracza na :\t" << nazwa_Gracza << endl;
-		cout << "=========================================================" << endl << endl;
-	}
-
-	void wylosuj_kostki(MyContener<KostkaLicz, 28> &kostkaTab)
-	{
-		int * wylosowane = new int[LICZK];
-		int wylosowanych = 0;
-		do {
-			int wybd = rand() % +(kostkaTab.getTop());
-			moje_kostki.push(kostkaTab.pop(wybd));
-		} while (moje_kostki.getTop() < LICZK);
-		delete[] wylosowane;
-	}
-
-	void wyswietlMoje_kostki()
+	virtual void wyswietlMoje_kostki()
 	{
 		printf("\n\nGracz:\t%s\nTwoje kostki\n\n", nazwa_Gracza);
 		for (int i = 0; i < moje_kostki.getTop(); i++) {
@@ -176,14 +156,9 @@ public:
 		moje_kostki.setTop();
 	}
 
-	virtual KostkaLicz polozKostke(int i)
+	KostkaLicz ukladanie(int i)
 	{
 		return moje_kostki.pop(i);
-	}
-
-	int top()
-	{
-		return moje_kostki.getTop();
 	}
 
 	void pobierz_Kostke(MyContener<KostkaLicz, 28> &kontener)
@@ -192,43 +167,114 @@ public:
 		moje_kostki.push(kontener.pop(ran));
 	}
 
+public:
+
+	Gracz(char *nazwaGracza)
+	{
+		strcpy(this->nazwa_Gracza, nazwaGracza);
+		punkty = 0;
+		cout << "=========================================================" << endl;
+		cout << "Ustawiono nazwê gracza na :\t" << nazwa_Gracza << endl;
+		cout << "=========================================================" << endl << endl;
+	}
+
+	int top()
+	{
+		return moje_kostki.getTop();
+	}
+
 	void wygrana()
 	{
 		printf("Brawo !!!\nGracz:\t%s Wygra³!!!!\n\n", nazwa_Gracza);
 	}
+
+	void wylosuj_kostki(MyContener<KostkaLicz, 28> &kostkaTab)
+	{
+		int * wylosowane = new int[LICZK];
+		int wylosowanych = 0;
+		do {
+			int wybd = rand() % +(kostkaTab.getTop());
+			moje_kostki.push(kostkaTab.pop(wybd));
+		} while (moje_kostki.getTop() < LICZK);
+		delete[] wylosowane;
+	}
+	
+	virtual void polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	{
+		bool czyOk;
+		do {
+			putchar('\n');
+			ulk.wyswietl_kostki();
+			this->wyswietlMoje_kostki();
+			putchar('\n');
+			int wyb;
+			cout << "\nProszê wybraæ kostkê:\t";
+			cin >> wyb;
+			if ((wyb - 1) == this->top())
+			{
+				czyOk = true;
+				this->pobierz_Kostke(kontener);
+				break;
+			}
+			czyOk = ulk.uluz_kostke(this->ukladanie(wyb - 1));
+			if (czyOk == false) {
+				cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
+				this->zwiekszTop();
+				Sleep(1000);
+				system("cls");
+			}
+		} while (czyOk == false);
+	}
+
 };
 
 class Komputer :public Gracz {
 
-public:
+protected:
 
-	Komputer(Gracz gr/*, char *nazwaGracza*/) :Gracz(gr)
+	void wyswietlMoje_kostki()
 	{
-		//Gracz gra = Gracz(nazwaGracza);
-		/*strcpy(this->nazwa_Gracza, nazwaGracza);
-		punkty = 0;
-		cout << "=========================================================" << endl;
-		cout << "Ustawiono nazwê gracza na :\t" << nazwa_Gracza << endl;
-		cout << "=========================================================" << endl << endl;*/
+		printf("\n\nGracz:\t%s\nTwoje kostki\n\n", nazwa_Gracza);
+		for (int i = 0; i < moje_kostki.getTop(); i++) {
+			printf("%i\t|%i|%i|\t\t", i + 1, moje_kostki.wyswietl(i).getLiczba_l(), moje_kostki.wyswietl(i).getLiczba_p());
+			if (i % 2 == 1)
+				putchar('\n');
+		}
 	}
 
-	void polozkostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+public:
+
+	Komputer(Gracz gr) :Gracz(gr) { ; }
+
+	void polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
 	{
+		this->wyswietlMoje_kostki();
+		bool czyUlozono = false;
 		for (int i = 0; i < this->moje_kostki.getTop(); i++)
 		{
 			if (this->moje_kostki.wyswietl(i).getLiczba_l() == ulk.ostatnia())
 			{
-				this->polozKostke(i);
+				czyUlozono = ulk.uluz_kostke(this->ukladanie(i));
+				cout << "\nKomputer ulozyl kostke" << endl;
+				break;
 			}
 			else if (this->moje_kostki.wyswietl(i).getLiczba_p() == ulk.ostatnia()) {
-				this->polozKostke(i);
+				czyUlozono = ulk.uluz_kostke(this->ukladanie(i));
+				cout << "\nKomputer ulozyl kostke" << endl;
+				break;
 			}
-			else {
-				this->pobierz_Kostke(kontener);
-			}
+			
 		}
+		if(czyUlozono==false) {
+			this->pobierz_Kostke(kontener);
+			cout << "\nPobranie kostki\n";
+		}
+		Sleep(3000);
+		system("cls");
 	}
 
+	
+	
 };
 
 #endif
