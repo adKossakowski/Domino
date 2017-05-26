@@ -1,7 +1,7 @@
 
 #include "ClassFile.h"
 #define _WIN32_WINNT 0x0500
-#define ROUND 1
+#define ROUND 2
 
 
 void poczatek()
@@ -33,7 +33,7 @@ int przywitanie()
 		cout << "+---+---------------------------------------------------+" << endl;
 		cout << "| 2 |  Gra z innym graczem                              |" << endl;
 		cout << "+---+---------------------------------------------------+" << endl;
-		cout << "| 3 |  Rozpoczêcie od ostatniej gry                     |" << endl;
+		cout << "| 3 |  Ranking						                     |" << endl;
 		cout << "+---+---------------------------------------------------+" << endl;
 		cout << "| 4 |  Zakoñczenie gry                                  |" << endl;
 		cout << "+---+---------------------------------------------------+" << endl << endl;

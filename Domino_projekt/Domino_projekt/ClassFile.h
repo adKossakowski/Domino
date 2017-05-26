@@ -268,6 +268,7 @@ public:
 	virtual void wygrajRunde()
 	{
 		cout << "\n\nGracz " << nazwa_Gracza << " wygra³ mecz\n\n";
+		Sleep(5000);
 		FILE *plik;
 		if (file_exists("plik_rankingowy.txt")) {
 			if ((plik = fopen("plik_rankingowy.txt", "r")) != NULL)
