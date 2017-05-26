@@ -11,9 +11,19 @@
 #include<string.h>
 #include<ctime>
 #include<stdlib.h>
+#include<fstream>
+#include<vector>
 #include<Windows.h>
 
 using namespace std;
+
+bool file_exists(const char *cSpecyf_Zbioru)
+{
+	struct stat buf;
+	if (stat(cSpecyf_Zbioru, &buf) == 0)
+		return true;
+	else return false;
+}
 
 template<typename T, int rozmiar>
 class MyContener {
@@ -44,6 +54,11 @@ public:
 	}
 
 	void setTop() { top++; };
+
+	void SetTop(int i)
+	{
+		top = i;
+	}
 };
 
 class KostkaLicz {
@@ -92,7 +107,20 @@ public:
 class UlozenieKostek
 {
 	MyContener<KostkaLicz, 28> lista;
+	int pierwszaKostka;
 public:
+
+	int pierwsza()
+	{
+		return lista.wyswietl(0).getLiczba_l();
+	}
+
+	bool czyTakieSame()
+	{
+		if (lista.wyswietl(lista.getTop() - 1).getLiczba_p() == lista.wyswietl(lista.getTop() - 1).getLiczba_l())
+			return true;
+		else return false;
+	}
 
 	int ostatnia()//dla klasy Komputer zwraca ostatni numer kostki
 	{
@@ -103,6 +131,7 @@ public:
 	{
 		int wyb = rand() % kostkaTab.getTop();
 		lista.push(kostkaTab.pop(wyb));
+		//pierwszaKostka = kostkaTab.wyswietl(0).getLiczba_l();
 	}
 
 	void wyswietl_kostki()
@@ -138,7 +167,7 @@ class Gracz
 protected:
 	char nazwa_Gracza[MAX];
 	int punkty;
-	MyContener<KostkaLicz, LICZK + 4> moje_kostki;
+	MyContener<KostkaLicz, 28> moje_kostki;
 
 	virtual void wyswietlMoje_kostki()
 	{
@@ -149,6 +178,7 @@ protected:
 				putchar('\n');
 		}
 		printf("\n\n%i\tPobranie kostki", moje_kostki.getTop() + 1);
+		printf("\n\nPunkty :\t%i", punkty);
 	}
 
 	void zwiekszTop()
@@ -161,15 +191,53 @@ protected:
 		return moje_kostki.pop(i);
 	}
 
-	void pobierz_Kostke(MyContener<KostkaLicz, 28> &kontener)
+	bool pobierz_Kostke(MyContener<KostkaLicz, 28> &kontener)
 	{
-		int ran = rand() % kontener.getTop();
-		moje_kostki.push(kontener.pop(ran));
+		if (kontener.getTop() != 0) {
+			int ran = rand() % kontener.getTop();
+			moje_kostki.push(kontener.pop(ran));
+			return true;
+		}
+		else return false;
+	}
+
+	bool czySaKostki(UlozenieKostek &ulk)
+	{
+		for (int i = 0; i < this->moje_kostki.getTop(); i++)
+		{
+			if (this->moje_kostki.wyswietl(i).getLiczba_l() == ulk.ostatnia())
+			{
+				return true;
+			}
+			else if (this->moje_kostki.wyswietl(i).getLiczba_p() == ulk.ostatnia()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	int punkty_koniec(MyContener<KostkaLicz, 28> &kontener)
+	{
+		int ret = 0;
+		for (int i = 0; i < kontener.getTop(); i++)
+		{
+			ret += (kontener.wyswietl(i).getLiczba_l() + kontener.wyswietl(i).getLiczba_p());
+		}
+		for (int i = 0; i < moje_kostki.getTop(); i++)
+		{
+			ret -= (moje_kostki.wyswietl(i).getLiczba_l() + moje_kostki.wyswietl(i).getLiczba_p());
+		}
+		return ret;
 	}
 
 public:
 
-	Gracz(char *nazwaGracza)
+	void zeruj()
+	{
+		this->moje_kostki.SetTop(0);
+	}
+
+	Gracz(char *nazwaGracza):punkty(0)
 	{
 		strcpy(this->nazwa_Gracza, nazwaGracza);
 		punkty = 0;
@@ -183,9 +251,82 @@ public:
 		return moje_kostki.getTop();
 	}
 
-	void wygrana()
+	void wygrana(UlozenieKostek &ulk, MyContener<KostkaLicz, 28> &kontener)
 	{
-		printf("Brawo !!!\nGracz:\t%s Wygra³!!!!\n\n", nazwa_Gracza);
+		system("cls");
+		ulk.wyswietl_kostki();
+		punkty += this->punkty_koniec(kontener);
+		printf("\n\nBrawo !!!\nGracz:\t%s Wygra³!!!!\n\n", nazwa_Gracza);
+		printf("Liczba punktów gracza %s:\t%d\n\n", nazwa_Gracza, punkty);
+	}
+
+	int kto_wygral()
+	{
+		return punkty;
+	}
+
+	virtual void wygrajRunde()
+	{
+		cout << "\n\nGracz " << nazwa_Gracza << " wygra³ mecz\n\n";
+		FILE *plik;
+		if (file_exists("plik_rankingowy.txt")) {
+			if ((plik = fopen("plik_rankingowy.txt", "r")) != NULL)
+			{
+				vector<int> t_pkt;
+				vector<string> naz;
+				int l;
+				char n[10];
+				string sn;
+				do {
+				fscanf(plik, "%s" "%d\n", n, &l);
+				sn = n;
+				t_pkt.push_back(l);
+				naz.push_back(sn);
+				} while (!feof(plik));
+				fclose(plik);
+				if (plik = fopen("plik_rankingowy.txt", "w"))
+				{
+					bool insert = false;
+					for (int i = 0; i < t_pkt.size(); i++)
+					{
+						if (t_pkt[i] <= punkty && insert == false) {
+							fprintf(plik, "%s %d\n", nazwa_Gracza, punkty);
+							fprintf(plik, "%s %d\n", naz[i].c_str(), t_pkt[i]);
+							insert = true;
+						}	
+						else
+							fprintf(plik, "%s %d\n", naz[i].c_str(), t_pkt[i]);
+						cout << "\nZapisywanie\n";
+						system("cls");
+					}
+					if(insert==false)
+						fprintf(plik, "%s %d\n", nazwa_Gracza, punkty);
+					fclose(plik);
+				}
+				
+			}
+		}
+		else {
+			if ((plik = fopen("plik_rankingowy.txt", "w"))==NULL) {
+				cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			}
+			else {
+				fprintf(plik, "%s %d\n", nazwa_Gracza, punkty);
+				fclose(plik);
+			}
+		}
+		system("cls");
+	}
+
+	int f_punkty()
+	{
+		int zwroc = 0;
+		for (int i = 0; i < moje_kostki.getTop(); i++)
+		{
+			zwroc += moje_kostki.wyswietl(i).getLiczba_l();
+			zwroc += moje_kostki.wyswietl(i).getLiczba_p();
+		}
+		return zwroc;
 	}
 
 	void wylosuj_kostki(MyContener<KostkaLicz, 28> &kostkaTab)
@@ -199,9 +340,15 @@ public:
 		delete[] wylosowane;
 	}
 	
-	virtual void polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	MyContener<KostkaLicz, 28> doWygranej()
 	{
-		bool czyOk;
+		return this->moje_kostki;
+	}
+	
+	virtual bool polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	{
+		bool czyOk; 
+		bool czyPobranoKostke=true;
 		do {
 			putchar('\n');
 			ulk.wyswietl_kostki();
@@ -209,23 +356,51 @@ public:
 			putchar('\n');
 			int wyb;
 			cout << "\nProszê wybraæ kostkê:\t";
-			cin >> wyb;
+			while (true) {
+				cin >> wyb;
+				bool czyDobra = cin.good();
+				if (czyDobra && wyb >= 0)
+					break;
+				else {
+					cout << "Niepoprawna dana proszê wybraæ jeszcze raz:\t";
+					std::cin.clear();
+					std::cin.ignore(1000, '\n');
+				}
+			}
 			if ((wyb - 1) == this->top())
 			{
-				czyOk = true;
-				this->pobierz_Kostke(kontener);
+				czyOk = true; 
+				czyPobranoKostke = this->pobierz_Kostke(kontener);
 				break;
 			}
-			czyOk = ulk.uluz_kostke(this->ukladanie(wyb - 1));
+			czyOk = ulk.uluz_kostke(this->ukladanie(wyb - 1));//uloz kostke sprawdza czy kostka pasuje do ulozenia
 			if (czyOk == false) {
 				cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
 				this->zwiekszTop();
 				Sleep(1000);
 				system("cls");
 			}
+			else {
+				int pkt = ulk.pierwsza() + ulk.ostatnia();
+				if ((pkt % 2) == 0) {
+					if (ulk.czyTakieSame())
+						punkty += ulk.pierwsza() + 2 * ulk.ostatnia();
+					else
+						punkty += + ulk.pierwsza() + ulk.ostatnia();
+				
+				}
+					
+			}
 		} while (czyOk == false);
+		if (czyPobranoKostke == false)
+		{
+			bool czyDaSieUlozyc = this->czySaKostki(ulk);
+			if (czyDaSieUlozyc == false)
+				return false;
+		}
+		return true;
 	}
-
+	
 };
 
 class Komputer :public Gracz {
@@ -244,37 +419,63 @@ protected:
 
 public:
 
-	Komputer(Gracz gr) :Gracz(gr) { ; }
+	Komputer(char *name) :Gracz(name) { ; }
 
-	void polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	void wygrajRunde()
 	{
-		this->wyswietlMoje_kostki();
+		cout << "\n\nGracz " << nazwa_Gracza << " wygra³ mecz\n\n";
+	}
+
+	bool polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	{
 		bool czyUlozono = false;
+		bool czyPobranoKostke = true;
 		for (int i = 0; i < this->moje_kostki.getTop(); i++)
 		{
 			if (this->moje_kostki.wyswietl(i).getLiczba_l() == ulk.ostatnia())
 			{
 				czyUlozono = ulk.uluz_kostke(this->ukladanie(i));
 				cout << "\nKomputer ulozyl kostke" << endl;
+				int pkt = (ulk.pierwsza() + ulk.ostatnia());
+				if ((pkt % 5) == 0) {
+					if (ulk.czyTakieSame())
+						punkty += ulk.pierwsza() + 2 * ulk.ostatnia();
+					else
+						punkty += pkt;
+
+				}
 				break;
 			}
 			else if (this->moje_kostki.wyswietl(i).getLiczba_p() == ulk.ostatnia()) {
 				czyUlozono = ulk.uluz_kostke(this->ukladanie(i));
 				cout << "\nKomputer ulozyl kostke" << endl;
+				int pkt = (ulk.pierwsza() + ulk.ostatnia());
+				if ((pkt % 2) == 0) {
+					if (ulk.czyTakieSame())
+						punkty += ulk.pierwsza() + 2 * ulk.ostatnia();
+					else
+						punkty += pkt;
+
+				}
 				break;
 			}
 			
 		}
-		if(czyUlozono==false) {
-			this->pobierz_Kostke(kontener);
-			cout << "\nPobranie kostki\n";
+		if(czyUlozono == false) {
+			czyPobranoKostke = this->pobierz_Kostke(kontener);
+			if(czyPobranoKostke == true)
+				cout << "\nPobranie kostki\n";
 		}
+		if (czyPobranoKostke == false)
+		{
+			bool czyDaSieUlozyc = this->czySaKostki(ulk);
+			if (czyDaSieUlozyc == false)
+				return false;
+		}
+		return true;
 		Sleep(3000);
 		system("cls");
 	}
-
-	
-	
 };
 
 #endif
