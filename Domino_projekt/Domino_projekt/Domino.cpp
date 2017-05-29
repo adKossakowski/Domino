@@ -278,6 +278,9 @@ int main()
 				system("cls");
 				break;
 			}
+			else if (wybor == 4){
+
+			}
 			else {
 				return 0;
 			}
