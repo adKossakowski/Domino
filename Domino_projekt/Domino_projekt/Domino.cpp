@@ -35,7 +35,9 @@ int przywitanie()
 		cout << "+---+---------------------------------------------------+" << endl;
 		cout << "| 3 |  Ranking						                     |" << endl;
 		cout << "+---+---------------------------------------------------+" << endl;
-		cout << "| 4 |  Zakoñczenie gry                                  |" << endl;
+		cout << "| 4 |  Rozpoczêcie ostatniej gry                        |" << endl;
+		cout << "+---+---------------------------------------------------+" << endl;
+		cout << "| 5 |  Zakoñczenie gry                                  |" << endl;
 		cout << "+---+---------------------------------------------------+" << endl << endl;
 		cout << "========================================================" << endl;
 		cout << "Wybór:\t";
@@ -50,7 +52,7 @@ int przywitanie()
 				std::cin.ignore(1000, '\n');
 			}
 		}
-		if (wybor == 1 || wybor == 2 || wybor == 3 || wybor == 4)
+		if (wybor == 1 || wybor == 2 || wybor == 3 || wybor == 4 || wybor == 5)
 			break;
 		else
 		{
@@ -72,13 +74,15 @@ int main()
 	setlocale(LC_ALL, "");
 	poczatek();
 	while (true) {
-		int wybor = przywitanie();
+		
 		///rozlosowanie zmiennych dla graczy
 		while (true)
 		{
+			int wybor = przywitanie();
 			if (wybor == 1)
 			{
 				putchar('\n');
+				bool jakiKoniec = true;
 				cout << "Proszê wprowadziæ nazwê pierwszego gracza:\t";
 				char nazwa[MAX];
 				cin >> nazwa;
@@ -106,24 +110,32 @@ int main()
 					//wylosowano kostke do ulozenia
 					while (true)
 					{
-						bool g1 = gracz1->polozKostke(kontener, ulk);
+						int g1 = gracz1->polozKostke(kontener, ulk);
 						if (gracz1->top() == 0)
 						{
 							gracz1->wygrana(ulk, gracz2->doWygranej());
+							break;
+						}
+						//zapisywanie
+						if (g1 == 3){
+							Saving *saving = new Saving(1, q);
+							jakiKoniec = saving->zapiss(ulk, kontener, *gracz1, *gracz2, 'k');
+							q = ROUND;
+							delete(saving);
 							break;
 						}
 						//
 						Sleep(1000);
 						system("cls");
 						//
-						bool g2 = gracz2->polozKostke(kontener, ulk);
+						int g2 = gracz2->polozKostke(kontener, ulk);
 						if (gracz2->top() == 0)
 						{
 							gracz2->wygrana(ulk, gracz1->doWygranej());
 							break;
 						}
 
-						if (g1 == false && g2 == false) {//sparwdza czy gracze mog¹ po³o¿yæ jaszcze jakies kostki jesli nie konczy gre
+						if (g1 == 0 && g2 == 0) {//sparwdza czy gracze mog¹ po³o¿yæ jaszcze jakies kostki jesli nie konczy gre
 							if (gracz1->f_punkty() <= gracz2->f_punkty())
 							{
 								gracz1->wygrana(ulk, gracz2->doWygranej());
@@ -140,17 +152,20 @@ int main()
 					gracz1->zeruj();
 					gracz2->zeruj();
 				}
-				if (gracz1->kto_wygral() >= gracz2->kto_wygral())
-				{
-					gracz1->wygrajRunde();
+				if (jakiKoniec == true) {
+					if (gracz1->kto_wygral() >= gracz2->kto_wygral())
+					{
+						gracz1->wygrajRunde();
+					}
+					else gracz2->wygrajRunde();
+					delete(gracz1);
+					delete(gracz2);
+					break;
 				}
-				else gracz2->wygrajRunde();
-				delete(gracz1);
-				delete(gracz2);
-				break;
 			}
 			else if (wybor == 2) {
 				putchar('\n');
+				bool jakiKoniec = true;
 				cout << "Proszê wprowadziæ nazwê pierwszego gracza:\t";
 				char nazwa[MAX];
 				cin >> nazwa;
@@ -177,15 +192,22 @@ int main()
 					UlozenieKostek ulk;
 					ulk.pierwsza_kostka(kontener);
 					while (true) {
-						bool g1 = gracz1->polozKostke(kontener, ulk);
+						int g1 = gracz1->polozKostke(kontener, ulk);
 						if (gracz1->top() == 0)
 						{
 							gracz1->wygrana(ulk, gracz2->doWygranej());
 							break;
 						}
+						if (g1 == 3) {
+							Saving *saving = new Saving(1, q);
+							jakiKoniec = saving->zapiss(ulk, kontener, *gracz1, *gracz2, 'g');
+							q = ROUND;
+							delete(saving);
+							break;
+						}
 						Sleep(1000);
 						system("cls");
-						bool g2 = gracz2->polozKostke(kontener, ulk);
+						int g2 = gracz2->polozKostke(kontener, ulk);
 						Sleep(1000);
 						system("cls");
 						if (gracz2->top() == 0)
@@ -194,8 +216,14 @@ int main()
 
 							break;
 						}
-
-						if (g1 == false && g2 == false) {
+						if (g2 == 3) {
+							Saving *saving = new Saving(2, q);
+							jakiKoniec = saving->zapiss(ulk, kontener, *gracz1, *gracz2, 'g');
+							q = ROUND;
+							delete(saving);
+							break;
+						}
+						if (g1 == 0 && g2 == 0) {
 							if (gracz1->f_punkty() <= gracz2->f_punkty())
 							{
 								gracz1->wygrana(ulk, gracz2->doWygranej());
@@ -211,11 +239,13 @@ int main()
 					gracz1->zeruj();
 					gracz2->zeruj();
 				}
-				if (gracz1->kto_wygral() >= gracz2->kto_wygral())
-				{
-					gracz1->wygrajRunde();
+				if (jakiKoniec == true) {
+					if (gracz1->kto_wygral() >= gracz2->kto_wygral())
+					{
+						gracz1->wygrajRunde();
+					}
+					else gracz2->wygrajRunde();
 				}
-				else gracz2->wygrajRunde();
 				delete(gracz1);
 				delete(gracz2);
 				break;

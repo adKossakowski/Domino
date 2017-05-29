@@ -30,6 +30,7 @@ class MyContener {
 	T stos[rozmiar];
 	int top;
 public:
+	friend class Saving;
 	int getTop()
 	{
 		return top;
@@ -109,7 +110,7 @@ class UlozenieKostek
 	MyContener<KostkaLicz, 28> lista;
 	int pierwszaKostka;
 public:
-
+	friend class Saving;
 	int pierwsza()
 	{
 		return lista.wyswietl(0).getLiczba_l();
@@ -178,6 +179,7 @@ protected:
 				putchar('\n');
 		}
 		printf("\n\n%i\tPobranie kostki", moje_kostki.getTop() + 1);
+		printf("\n\n%i\tWyjœcie z gry", moje_kostki.getTop() + 2);
 		printf("\n\nPunkty :\t%i", punkty);
 	}
 
@@ -231,7 +233,7 @@ protected:
 	}
 
 public:
-
+	friend class Saving;
 	void zeruj()
 	{
 		this->moje_kostki.SetTop(0);
@@ -346,7 +348,7 @@ public:
 		return this->moje_kostki;
 	}
 	
-	virtual bool polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	virtual int polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
 	{
 		bool czyOk; 
 		bool czyPobranoKostke=true;
@@ -374,6 +376,9 @@ public:
 				czyPobranoKostke = this->pobierz_Kostke(kontener);
 				break;
 			}
+			else if (wyb == this->top()+2) {
+				return 3;//przerwanie gry
+			}
 			czyOk = ulk.uluz_kostke(this->ukladanie(wyb - 1));//uloz kostke sprawdza czy kostka pasuje do ulozenia
 			if (czyOk == false) {
 				cout << "Nieprawidlowy wybór proszê wybraæ kostkê jeszcze raz:\t";
@@ -397,9 +402,9 @@ public:
 		{
 			bool czyDaSieUlozyc = this->czySaKostki(ulk);
 			if (czyDaSieUlozyc == false)
-				return false;
+				return 0;//nie da sie ulozyc
 		}
-		return true;
+		return 1;//da sie ulozyc
 	}
 	
 };
@@ -427,7 +432,7 @@ public:
 		cout << "\n\nGracz " << nazwa_Gracza << " wygra³ mecz\n\n";
 	}
 
-	bool polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
+	int polozKostke(MyContener<KostkaLicz, 28> &kontener, UlozenieKostek &ulk)
 	{
 		bool czyUlozono = false;
 		bool czyPobranoKostke = true;
@@ -471,11 +476,77 @@ public:
 		{
 			bool czyDaSieUlozyc = this->czySaKostki(ulk);
 			if (czyDaSieUlozyc == false)
-				return false;
+				return 0;//nie da sie ulozyc
 		}
-		return true;
-		Sleep(3000);
-		system("cls");
+		return 1;//da sie ulozyc
+	}
+};
+
+class Saving {
+protected:
+	int kogoRuch;
+	int round;
+public:
+
+	Saving() :kogoRuch(0) {};
+
+	Saving(int f_kogoRuch, int f_round) :kogoRuch(f_kogoRuch), round(f_round) {};
+
+	~Saving() {};
+
+	bool zapiss(UlozenieKostek &slista, MyContener<KostkaLicz, 28> &skoszyk, Gracz &sgracz1, Gracz &sgracz2, char TrybGry) {
+		FILE *stream;
+		if ((stream = fopen("plik_savingGame_list.txt", "w")) == NULL) {
+			cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			return true;
+		}
+		else
+		for (int i = 0; i < slista.lista.top; i++) {
+			fprintf(stream, "%d %d\n" ,slista.lista.stos[i].getLiczba_l(), slista.lista.stos[i].getLiczba_p());
+		}
+		fclose(stream);
+		//////////////
+		if ((stream = fopen("plik_savingGame_koszyk.txt", "w")) == NULL) {
+			cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			return true;
+		}
+		else
+		for (int i = 0; i < skoszyk.top; i++) {
+			fprintf(stream, "%d %d\n", skoszyk.stos[i].getLiczba_l(), skoszyk.stos[i].getLiczba_p());
+		}
+		fclose(stream);
+		//////////////
+		if ((stream = fopen("plik_savingGame_Gracz1.txt", "w")) == NULL) {
+			cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			return true;
+		}
+		else
+			for (int i = 0; i < sgracz1.moje_kostki.top; i++) {
+				fprintf(stream, "%d %d\n", sgracz1.moje_kostki.stos[i].getLiczba_l(), sgracz1.moje_kostki.stos[i].getLiczba_p());
+			}
+		fclose(stream);
+		//////////////
+		if ((stream = fopen("plik_savingGame_Gracz2.txt", "w")) == NULL) {
+			cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			return true;
+		}
+		else
+			for (int i = 0; i < sgracz2.moje_kostki.top; i++) {
+				fprintf(stream, "%d %d\n", sgracz2.moje_kostki.stos[i].getLiczba_l(), sgracz2.moje_kostki.stos[i].getLiczba_p());
+			}
+		fclose(stream);
+		///////////////
+		if ((stream = fopen("plik_savingGame_Tryb.txt", "w")) == NULL) {
+			cout << "\a\nNie uda³o siê otworzyæ pliku do zapisu\n";
+			return true;
+		}
+		else {
+			fprintf(stream, "%c\n", TrybGry);
+			fprintf(stream, "%d %d %d %d\n", sgracz1.punkty, sgracz2.punkty, kogoRuch, round);
+			fprintf(stream, "%s %s\n", sgracz1.nazwa_Gracza, sgracz2.nazwa_Gracza);
+		}
+		fclose(stream);
+		return false;
 	}
 };
 
